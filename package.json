@@ -1,8 +1,8 @@
 {
-  "name": "utility-app",
+  "name": "harmonies-locales",
   "version": "0.0.1",
-  "description": "Utility app is a versatile personal assistant web app that combines weekly meal planning, a smart shopping list, a note-taking system, a suite of classic games, a whiteboard for drawing, and a scientific calculator — all designed for convenience and productivity in everyday life",
-  "productName": "Utility App ",
+  "description": "",
+  "productName": "Harmonies-Locales",
   "author": "Vincent Da Silva <vin--cent@hotmail.fr>",
   "type": "module",
   "private": true,

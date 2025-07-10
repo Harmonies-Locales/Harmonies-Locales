@@ -44,7 +44,7 @@ export default defineConfig((/* ctx */) => {
       },
       publicPath:
         process.env.NODE_ENV === 'production'
-          ? '/utility-app/' // GitHub Pages
+          ? '/Harmonies-Locales/' // GitHub Pages
           : '/', // Dev local
       vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
