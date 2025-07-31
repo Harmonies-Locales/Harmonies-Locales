@@ -2,24 +2,16 @@
   <q-page class="q-pa-xl bg-gradient text-white">
     <div class="q-mx-auto" style="max-width: 900px">
       <div class="text-center q-mb-xl">
-        <h1 class="text-h4 text-bold">Prochaines Représentations</h1>
-        <p class="text-subtitle1">Votez pour les chansons et explorez les concerts à venir !</p>
+        <h1 class="text-h4 text-bold">Anciennes Représentations</h1>
+        <p class="text-subtitle1">Découvrez les concerts passés !</p>
       </div>
 
-      <div class="q-mb-md text-right">
-        <q-toggle v-model="showPast" label="Afficher les anciens événements" color="primary" />
-      </div>
-
-      <CreateEventForm v-if="role === 'admin'" class="q-mb-xl" />
-
-      <EventCard
-        v-for="event in filteredEvents"
+      <ArchivedEventCard
+        v-for="event in archivedEvents"
         :key="event.id"
-        :event-id="event.id"
         :event="event"
-        :is-admin="role === 'admin'"
-        :has-voted="hasVoted(event.id)"
-        @voted="markVoted(event.id)"
+        :event-id="event.id"
+        :isAdmin="role === 'admin'"
       />
     </div>
   </q-page>
@@ -30,8 +22,7 @@ import { ref, onMounted, computed } from 'vue';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from 'boot/firebase';
 import { useUserRole } from '../composables/useUserRole';
-import CreateEventForm from 'components/CreateEventForm.vue';
-import EventCard from 'components/EventCard.vue';
+import ArchivedEventCard from 'components/ArchivedEventCard.vue';
 
 interface EventData {
   id: string;
@@ -41,29 +32,20 @@ interface EventData {
   description: string;
   image?: string;
   songs: { title: string; votes: number }[];
+  songsPlayed?: string[];
+  photos?: string[];
   archived?: boolean;
 }
 
 const events = ref<EventData[]>([]);
 const { role } = useUserRole();
-const showPast = ref(false);
 const votedEvents = ref<string[]>([]);
 
-const filteredEvents = computed(() => {
-  const now = new Date().toISOString();
+const archivedEvents = computed(() => {
   return events.value
-    .filter((e) => showPast.value || e.date >= now)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .filter((e) => e.archived)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 });
-
-function hasVoted(eventId: string) {
-  return votedEvents.value.includes(eventId);
-}
-
-function markVoted(eventId: string) {
-  votedEvents.value.push(eventId);
-  localStorage.setItem('votedEvents', JSON.stringify(votedEvents.value));
-}
 
 onMounted(() => {
   const storedVotes = localStorage.getItem('votedEvents');

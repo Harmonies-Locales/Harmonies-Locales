@@ -82,7 +82,6 @@ async function handleSubmit() {
     createdAt: new Date(),
   });
 
-  // reset
   title.value = '';
   address.value = '';
   description.value = '';

@@ -20,8 +20,15 @@
               style="min-height: 280px"
             >
               <q-card-section class="text-center">
-                <q-avatar size="60px" class="bg-gradient text-white q-mb-sm">
-                  {{ membre.initials }}
+                <q-avatar size="60px" class="q-mb-sm">
+                  <template v-if="membre.photo">
+                    <img :src="membre.photo" alt="Photo de {{ membre.name }}" />
+                  </template>
+                  <template v-else>
+                    <div class="bg-gradient text-white full-height full-width flex flex-center">
+                      {{ membre.initials }}
+                    </div>
+                  </template>
                 </q-avatar>
                 <div class="text-subtitle1 text-bold">{{ membre.name }}</div>
                 <div class="text-subtitle2 text-primary">{{ membre.role }}</div>
@@ -49,6 +56,7 @@ interface Membre {
   name: string;
   role: string;
   description: string;
+  photo?: string;
 }
 
 const membres = ref<Membre[]>([]);

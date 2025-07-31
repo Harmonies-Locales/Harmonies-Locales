@@ -23,6 +23,30 @@
           >
             <q-tooltip>Supprimer l'événement</q-tooltip>
           </q-btn>
+
+          <q-btn
+            v-if="isAdmin"
+            icon="edit"
+            flat
+            round
+            dense
+            color="secondary"
+            @click="showEditDialog = true"
+          >
+            <q-tooltip>Modifier l’événement</q-tooltip>
+          </q-btn>
+
+          <q-btn
+            v-if="props.isAdmin && !event.archived"
+            icon="archive"
+            flat
+            round
+            dense
+            color="primary"
+            @click="archiveEvent"
+          >
+            <q-tooltip>Archiver l'événement</q-tooltip>
+          </q-btn>
         </div>
 
         <div class="text-subtitle1 text-weight-bold q-mb-xs">{{ event.title }}</div>
@@ -65,20 +89,58 @@
 
       <div class="col-auto">
         <div
-          class="flex flex-center bg-gradient"
-          style="
-            width: 150px;
-            height: 150px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-          "
+          class="flex flex-center bg-grey-4"
+          style="width: 150px; height: 150px; border-radius: 12px"
         >
           <q-img v-if="event.image" :src="event.image" fit="cover" style="border-radius: 12px" />
-          <q-icon v-else name="music_note" size="48px" color="white" />
+          <q-icon v-else name="music_note" size="48px" color="deep-purple-4" />
         </div>
       </div>
     </div>
   </q-card>
+
+  <q-dialog v-model="showEditDialog" persistent>
+    <q-card style="min-width: 400px">
+      <q-card-section>
+        <div class="text-h6">Modifier l’événement</div>
+      </q-card-section>
+
+      <q-card-section>
+        <q-input v-model="editData.title" label="Titre" filled class="q-mb-sm" />
+        <q-input
+          v-model="editData.description"
+          label="Description"
+          type="textarea"
+          filled
+          class="q-mb-sm"
+        />
+        <q-input v-model="editData.address" label="Adresse" filled class="q-mb-sm" />
+        <div class="q-mb-sm">
+          <div class="text-subtitle2 q-mb-xs">🎵 Chansons jouées</div>
+          <q-input
+            v-for="(song, index) in editData.songs"
+            :key="index"
+            v-model="editData.songs[index].title"
+            :label="'Chanson ' + (index + 1)"
+            filled
+            class="q-mb-xs"
+          />
+          <q-btn
+            icon="add"
+            flat
+            label="Ajouter une chanson"
+            color="primary"
+            @click="editData.songs.push({ title: '', votes: 0 })"
+          />
+        </div>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Annuler" color="grey" v-close-popup />
+        <q-btn flat label="Enregistrer" color="primary" @click="saveChanges" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
@@ -86,6 +148,8 @@ import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from 'boot/firebase';
 import { computed } from 'vue';
 import { getAuth } from 'firebase/auth';
+import { ref } from 'vue';
+import { reactive } from 'vue';
 
 const props = defineProps<{
   eventId: string;
@@ -95,20 +159,43 @@ const props = defineProps<{
     address: string;
     description: string;
     image?: string;
+    photos?: string[];
     songs: { title: string; votes: number }[];
+    songsPlayed?: string[];
     votedUserIds?: string[];
+    archived?: boolean;
   };
   isAdmin: boolean;
 }>();
 
-const emit = defineEmits(['voted', 'deleted']);
+const emit = defineEmits(['voted', 'deleted', 'archived']);
 const auth = getAuth();
 const user = auth.currentUser;
 const uid = user?.uid || '';
+const showEditDialog = ref(false);
 
 const hasAlreadyVoted = computed(() => {
   return props.event.votedUserIds?.includes(uid) ?? false;
 });
+
+const editData = reactive({
+  title: props.event.title,
+  description: props.event.description,
+  address: props.event.address,
+  songs: JSON.parse(JSON.stringify(props.event.songs)),
+});
+
+async function saveChanges() {
+  const eventRef = doc(db, 'events', props.eventId);
+  await updateDoc(eventRef, {
+    title: editData.title,
+    description: editData.description,
+    address: editData.address,
+    songs: editData.songs,
+  });
+
+  showEditDialog.value = false;
+}
 
 async function deleteEvent() {
   const confirmDelete = confirm('Voulez-vous vraiment supprimer cet événement ?');
@@ -117,6 +204,18 @@ async function deleteEvent() {
   const eventRef = doc(db, 'events', props.eventId);
   await deleteDoc(eventRef);
   emit('deleted');
+}
+
+async function archiveEvent() {
+  const confirmArchive = confirm('Voulez-vous archiver cet événement ?');
+  if (!confirmArchive) return;
+
+  const eventRef = doc(db, 'events', props.eventId);
+  await updateDoc(eventRef, {
+    archived: true,
+  });
+
+  emit('archived');
 }
 
 function formatDate(d: string): string {
