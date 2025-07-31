@@ -10,9 +10,20 @@ const routes: RouteRecordRaw[] = [
         redirect: '/home',
       },
       { path: 'home', component: () => import('pages/AccueilPage.vue') },
-      { path: 'login', component: () => import('pages/LoginPage.vue') },
-      { path: 'calendrier', component: () => import('pages/CalendrierPage.vue') },
-      { path: 'archives', component: () => import('pages/ArchivePage.vue') },
+      {
+        path: 'login',
+        component: () => import('pages/LoginPage.vue'),
+      },
+      {
+        path: 'calendrier',
+        component: () => import('pages/CalendrierPage.vue'),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: 'archives',
+        component: () => import('pages/ArchivePage.vue'),
+        meta: { requiresAuth: true },
+      },
     ],
   },
 

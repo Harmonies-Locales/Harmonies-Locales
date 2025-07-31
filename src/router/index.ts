@@ -6,6 +6,7 @@ import {
   createWebHistory,
 } from 'vue-router';
 import routes from './routes';
+import { getAuth } from 'firebase/auth';
 
 /*
  * If not building with SSR mode, you can
@@ -33,5 +34,16 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
+  Router.beforeEach((to, from, next) => {
+    const auth = getAuth();
+    const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+
+    if (requiresAuth && !auth.currentUser) {
+      // Redirige vers la page de login si pas connecté
+      next({ path: '/login' });
+    } else {
+      next();
+    }
+  });
   return Router;
 });
